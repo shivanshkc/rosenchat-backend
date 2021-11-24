@@ -4,6 +4,7 @@ import (
 	"context"
 	"rosenchat/src/configs"
 	"rosenchat/src/database/mongodb"
+	"rosenchat/src/exception"
 	"rosenchat/src/logger"
 	"time"
 
@@ -27,6 +28,10 @@ func (i *implMongoUserInfo) GetUserInfo(userID string) (*UserInfoDTO, error) {
 
 	result := i.getColl().FindOne(dbCallCtx, bson.M{"_id": userID})
 	if result.Err() != nil {
+		if result.Err() == mongo.ErrNoDocuments {
+			return nil, exception.UserNotFound()
+		}
+
 		log.Errorf("Unexpected error in FindOne call: %+v", result.Err())
 		return nil, result.Err()
 	}
