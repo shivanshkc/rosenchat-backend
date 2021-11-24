@@ -1,6 +1,9 @@
 package oauth
 
-import "sync"
+import (
+	"rosenchat/src/database"
+	"sync"
+)
 
 // IOAuthProvider represents a generic OAuth provider.
 type IOAuthProvider interface {
@@ -14,7 +17,7 @@ type IOAuthProvider interface {
 	Code2Token(code string) (string, error)
 
 	// Token2UserInfo converts the identity token into the user's info.
-	Token2UserInfo(token string) (*UserInfoDTO, error)
+	Token2UserInfo(token string) (*database.UserInfoDTO, error)
 
 	// init can be used to initialize the implementation.
 	init()

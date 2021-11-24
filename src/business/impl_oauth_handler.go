@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"rosenchat/src/configs"
+	"rosenchat/src/database"
 	"rosenchat/src/exception"
 	"rosenchat/src/oauth"
+	"rosenchat/src/utils/hashutils"
 	"rosenchat/src/utils/httputils"
 )
 
@@ -14,6 +16,7 @@ var conf = configs.Get()
 // implOAuthHandler implements IOAuthHandler.
 type implOAuthHandler struct {
 	providerMap map[string]oauth.IOAuthProvider
+	userInfoDB  database.IUserInfoDB
 }
 
 func (i *implOAuthHandler) Redirect(provider string, writer http.ResponseWriter) (*ResponseDTO, error) {
@@ -53,10 +56,9 @@ func (i *implOAuthHandler) HandleCallback(provider string, code string, writer h
 		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
 	}
 
-	go func() {
-		// Create entry in database.
-		_ = userInfo
-	}()
+	userInfo.ID = hashutils.SHA256Hex(userInfo.Email)
+
+	go func() { _ = i.userInfoDB.PutUserInfo(userInfo) }()
 
 	redirectURL := fmt.Sprintf("%s?id_token=%s&provider=%s", clientCallbackURL, token, provider)
 	respHeaders := map[string]string{"location": redirectURL}
@@ -70,4 +72,6 @@ func (i *implOAuthHandler) init() {
 	i.providerMap = map[string]oauth.IOAuthProvider{
 		googleProvider.Name(): googleProvider,
 	}
+
+	i.userInfoDB = database.Get()
 }

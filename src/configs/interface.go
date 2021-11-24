@@ -68,6 +68,16 @@ type IConfig struct {
 		// FilePath is the path to the log file.
 		FilePath string `default:"logs/service.log" env:"LOGGER_FILE_PATH" arg:"logger-file-path"`
 	}
+
+	// Mongo holds the MongoDB configs.
+	Mongo struct {
+		// Addr is the address of the MongoDB deployment.
+		Addr string `default:"mongodb://dev:dev@localhost:27017" env:"MONGO_ADDR" arg:"mongo-addr"`
+		// OperationTimeoutSec is the timeout in seconds for any MongoDB operation.
+		OperationTimeoutSec int `default:"60" env:"MONGO_OPERATION_TIMEOUT_SEC" arg:"mongo-operation-timeout-sec"`
+		// DatabaseName is the name of the MongoDB database.
+		DatabaseName string `default:"rosenchat-dev" env:"MONGO_DATABASE_NAME" arg:"mongo-database-name"`
+	}
 }
 
 // Get provides the IConfig singleton.

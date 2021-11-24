@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"rosenchat/src/configs"
+	"rosenchat/src/database"
 	"rosenchat/src/exception"
 	"rosenchat/src/jwt"
 	"rosenchat/src/logger"
@@ -80,7 +81,7 @@ func (i *implGoogle) Code2Token(code string) (string, error) {
 	return idToken.(string), nil
 }
 
-func (i *implGoogle) Token2UserInfo(token string) (*UserInfoDTO, error) {
+func (i *implGoogle) Token2UserInfo(token string) (*database.UserInfoDTO, error) {
 	claims, err := i.jwtManager.DecodeUnsafe(token)
 	if err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func (i *implGoogle) Token2UserInfo(token string) (*UserInfoDTO, error) {
 		return nil, exception.InternalServerError().AddMessages("insufficient info")
 	}
 
-	return &UserInfoDTO{
+	return &database.UserInfoDTO{
 		Email:       email.(string),
 		FirstName:   firstName.(string),
 		LastName:    lastName.(string),
