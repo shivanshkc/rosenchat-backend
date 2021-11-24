@@ -45,7 +45,6 @@ func (i *implOAuthHandler) HandleCallback(provider string, code string, writer h
 		respHeaders := map[string]string{"location": redirectURL}
 		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
 	}
-	fmt.Println("Token:", token)
 
 	userInfo, err := oAuthProvider.Token2UserInfo(token)
 	if err != nil {
@@ -54,7 +53,6 @@ func (i *implOAuthHandler) HandleCallback(provider string, code string, writer h
 		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
 	}
 
-	fmt.Println("User info:", userInfo)
 	go func() {
 		// Create entry in database.
 		_ = userInfo

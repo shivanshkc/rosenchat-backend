@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"rosenchat/src/configs"
 	"rosenchat/src/exception"
+	"rosenchat/src/jwt"
 	"rosenchat/src/logger"
 )
 
@@ -15,7 +16,9 @@ var conf = configs.Get()
 var log = logger.Get()
 
 // implGoogle implements IOAuthProvider interface for Google.
-type implGoogle struct{}
+type implGoogle struct {
+	jwtManager jwt.IJWTManager
+}
 
 func (i *implGoogle) Name() string {
 	return "google"
@@ -78,7 +81,29 @@ func (i *implGoogle) Code2Token(code string) (string, error) {
 }
 
 func (i *implGoogle) Token2UserInfo(token string) (*UserInfoDTO, error) {
-	panic("implement me")
+	claims, err := i.jwtManager.DecodeUnsafe(token)
+	if err != nil {
+		return nil, err
+	}
+
+	email, existsE := claims["email"]
+	firstName, existsF := claims["given_name"]
+	lastName, existsL := claims["family_name"]
+	pictureLink := claims["picture"]
+
+	if !existsE || !existsF || !existsL {
+		log.Errorf("Insufficient information from provider.")
+		return nil, exception.InternalServerError().AddMessages("insufficient info")
+	}
+
+	return &UserInfoDTO{
+		Email:       email.(string),
+		FirstName:   firstName.(string),
+		LastName:    lastName.(string),
+		PictureLink: pictureLink.(string),
+	}, nil
 }
 
-func (i *implGoogle) init() {}
+func (i *implGoogle) init() {
+	i.jwtManager = jwt.Get()
+}
