@@ -29,6 +29,24 @@ type IConfig struct {
 		Enabled bool `default:"true" env:"GRPC_SERVER_ENABLED" arg:"grpc-server-enabled"`
 	}
 
+	// GeneralOAuth holds the general OAuth configs.
+	GeneralOAuth struct {
+		// ServerCallbackBaseURL is the base URL of the backend server where it shall receive OAuth callbacks.
+		ServerCallbackBaseURL string `default:"http://localhost:8080" env:"GENERAL_OAUTH_SERVER_CALLBACK_BASE_URL" arg:"general-oauth-server-callback-base-url"`
+		// ClientCallbackURL is where the frontend will receive the OAuth result.
+		ClientCallbackURL string `default:"https://rosenchat.com/auth/callback" env:"GENERAL_OAUTH_CLIENT_CALLBACK_URL" arg:"general-oauth-client-callback-url"`
+	}
+
+	// GoogleOAuth holds the Google OAuth configs.
+	GoogleOAuth struct {
+		// RedirectURL is the authentication URL where the users are redirected.
+		RedirectURL string `default:"https://accounts.google.com/o/oauth2/v2/auth" env:"GOOGLE_OAUTH_REDIRECT_URL" arg:"google-oauth-redirect-url"`
+		// Scopes are the OAuth scopes.
+		Scopes string `default:"https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile" env:"GOOGLE_OAUTH_SCOPES" arg:"google-oauth-scopes"`
+		// ClientID is the OAuth client ID.
+		ClientID string `default:"" env:"GOOGLE_OAUTH_CLIENT_ID" arg:"google-oauth-client-id"`
+	}
+
 	// HTTPServer holds the HTTP server configs.
 	HTTPServer struct {
 		// Addr is the address where the HTTP server will listen.
