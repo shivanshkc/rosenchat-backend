@@ -45,6 +45,10 @@ type IConfig struct {
 		Scopes string `default:"https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile" env:"GOOGLE_OAUTH_SCOPES" arg:"google-oauth-scopes"`
 		// ClientID is the OAuth client ID.
 		ClientID string `default:"" env:"GOOGLE_OAUTH_CLIENT_ID" arg:"google-oauth-client-id"`
+		// ClientSecret is the OAuth client secret.
+		ClientSecret string `default:"" env:"GOOGLE_OAUTH_CLIENT_SECRET" arg:"google-oauth-client-secret"`
+		// TokenEndpoint is Google's endpoint to exchange OAuth-code with ID token.
+		TokenEndpoint string `default:"https://oauth2.googleapis.com/token" env:"GOOGLE_OAUTH_TOKEN_ENDPOINT" arg:"google-oauth-token-endpoint"`
 	}
 
 	// HTTPServer holds the HTTP server configs.

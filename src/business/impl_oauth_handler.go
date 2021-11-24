@@ -1,11 +1,15 @@
 package business
 
 import (
+	"fmt"
 	"net/http"
+	"rosenchat/src/configs"
 	"rosenchat/src/exception"
 	"rosenchat/src/oauth"
 	"rosenchat/src/utils/httputils"
 )
+
+var conf = configs.Get()
 
 // implOAuthHandler implements IOAuthHandler.
 type implOAuthHandler struct {
@@ -25,7 +29,42 @@ func (i *implOAuthHandler) Redirect(provider string, writer http.ResponseWriter)
 }
 
 func (i *implOAuthHandler) HandleCallback(provider string, code string, writer http.ResponseWriter) (*ResponseDTO, error) {
-	panic("implement me")
+	clientCallbackURL := conf.GeneralOAuth.ClientCallbackURL
+	excProvider := exception.ProviderNotFound()
+
+	oAuthProvider, exists := i.providerMap[provider]
+	if !exists {
+		redirectURL := fmt.Sprintf("%s?error=%s", clientCallbackURL, excProvider.Error())
+		respHeaders := map[string]string{"location": redirectURL}
+		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
+	}
+
+	token, err := oAuthProvider.Code2Token(code)
+	if err != nil {
+		redirectURL := fmt.Sprintf("%s?error=%s", clientCallbackURL, excProvider.Error())
+		respHeaders := map[string]string{"location": redirectURL}
+		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
+	}
+	fmt.Println("Token:", token)
+
+	userInfo, err := oAuthProvider.Token2UserInfo(token)
+	if err != nil {
+		redirectURL := fmt.Sprintf("%s?error=%s", clientCallbackURL, excProvider.Error())
+		respHeaders := map[string]string{"location": redirectURL}
+		httputils.WriteJSON(writer, nil, respHeaders, excProvider.StatusCode)
+	}
+
+	fmt.Println("User info:", userInfo)
+	go func() {
+		// Create entry in database.
+		_ = userInfo
+	}()
+
+	redirectURL := fmt.Sprintf("%s?id_token=%s&provider=%s", clientCallbackURL, token, provider)
+	respHeaders := map[string]string{"location": redirectURL}
+	httputils.WriteJSON(writer, nil, respHeaders, http.StatusFound)
+
+	return nil, nil
 }
 
 func (i *implOAuthHandler) init() {
