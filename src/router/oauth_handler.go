@@ -13,9 +13,9 @@ import (
 func oAuthRedirectHandler(writer http.ResponseWriter, req *http.Request) {
 	provider := mux.Vars(req)["provider"]
 
-	if _, err := business.GetOAuthHandler().Redirect(provider, writer); err != nil {
+	if _, err := business.GetOAuthHandler().Redirect(req.Context(), provider, writer); err != nil {
 		exc := exception.ToException(err)
-		httputils.WriteJSON(writer, exc, nil, exc.StatusCode)
+		httputils.WriteJSON(req.Context(), writer, exc, nil, exc.StatusCode)
 		return
 	}
 }
@@ -25,9 +25,9 @@ func oAuthCallbackHandler(writer http.ResponseWriter, req *http.Request) {
 	provider := mux.Vars(req)["provider"]
 	code := req.URL.Query().Get("code")
 
-	if _, err := business.GetOAuthHandler().HandleCallback(provider, code, writer); err != nil {
+	if _, err := business.GetOAuthHandler().HandleCallback(req.Context(), provider, code, writer); err != nil {
 		exc := exception.ToException(err)
-		httputils.WriteJSON(writer, exc, nil, exc.StatusCode)
+		httputils.WriteJSON(req.Context(), writer, exc, nil, exc.StatusCode)
 		return
 	}
 }

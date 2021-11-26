@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"sync"
 )
 
@@ -10,10 +11,10 @@ var userInfoSingleton IUserInfoDB
 // IUserInfoDB represents the database layer for User Info.
 type IUserInfoDB interface {
 	// GetUserInfo fetches the user info for the provided userID.
-	GetUserInfo(userID string) (*UserInfoDTO, error)
+	GetUserInfo(ctx context.Context, userID string) (*UserInfoDTO, error)
 
 	// PutUserInfo puts the user's info in the database.
-	PutUserInfo(info *UserInfoDTO) error
+	PutUserInfo(ctx context.Context, info *UserInfoDTO) error
 
 	// init can be used to initialize the implementation.
 	init()

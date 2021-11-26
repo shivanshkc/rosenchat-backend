@@ -58,6 +58,7 @@ func main() {
 		app.adapters,
 		adapters.GetHTTP(),
 		adapters.GetGRPC(),
+		adapters.GetCleanup(),
 	)
 
 	app.start()

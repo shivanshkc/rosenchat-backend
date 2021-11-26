@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net"
@@ -13,7 +14,7 @@ import (
 var log = logger.Get()
 
 // WriteJSON marshals the provided data into JSON and sends it as the HTTP response along with the provided status.
-func WriteJSON(writer http.ResponseWriter, body interface{}, headers map[string]string, status int) {
+func WriteJSON(ctx context.Context, writer http.ResponseWriter, body interface{}, headers map[string]string, status int) {
 	// Setting all the headers.
 	writer.Header().Set("content-type", "application/json")
 	for key, value := range headers {
@@ -26,18 +27,18 @@ func WriteJSON(writer http.ResponseWriter, body interface{}, headers map[string]
 	// Marshalling the body.
 	response, err := json.Marshal(body)
 	if err != nil {
-		log.Warnf("Failed to marshal HTTP response: %s", err.Error())
+		log.Warnf(ctx, "Failed to marshal HTTP response: %+v", err)
 		return
 	}
 
 	// Writing the body to the response.
 	if _, err := writer.Write(response); err != nil {
-		log.Warnf("Failed to write HTTP response: %s", err.Error())
+		log.Warnf(ctx, "Failed to write HTTP response: %+v", err)
 	}
 }
 
 // GetIPAddrFromRequest extracts the client IP Address from the given HTTP request.
-func GetIPAddrFromRequest(req *http.Request) string {
+func GetIPAddrFromRequest(ctx context.Context, req *http.Request) string {
 	// Using x-real-ip header.
 	ip := req.Header.Get("x-real-ip")
 	if parsedIP := net.ParseIP(ip); parsedIP != nil {
@@ -56,7 +57,7 @@ func GetIPAddrFromRequest(req *http.Request) string {
 	// Using RemoteAddr property.
 	ip, _, err := net.SplitHostPort(req.RemoteAddr)
 	if err != nil {
-		log.Warnf("Error in SplitHostPort call: %s", err.Error())
+		log.Warnf(ctx, "Error in SplitHostPort call: %s", err.Error())
 		return "unknown"
 	}
 
@@ -64,24 +65,24 @@ func GetIPAddrFromRequest(req *http.Request) string {
 		return parsedIP.String()
 	}
 
-	log.Warnf("Failed to obtain IP address of client.")
+	log.Warnf(ctx, "Failed to obtain IP address of client.")
 	return "unknown"
 }
 
 // UnmarshalBody reads the body of the given HTTP request and decodes it into the provided interface.
-func UnmarshalBody(req *http.Request, target interface{}) error {
+func UnmarshalBody(ctx context.Context, req *http.Request, target interface{}) error {
 	defer func() {
 		_ = req.Body.Close()
 	}()
 
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Errorf("Failed to read request body because: %+v", err)
+		log.Errorf(ctx, "Failed to read request body because: %+v", err)
 		return exception.BadRequest().AddErrors(err)
 	}
 
 	if err := json.Unmarshal(bodyBytes, target); err != nil {
-		log.Errorf("Failed to unmarshal request body because: %+v", err)
+		log.Errorf(ctx, "Failed to unmarshal request body because: %+v", err)
 		return exception.BadRequest().AddErrors(err)
 	}
 

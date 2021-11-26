@@ -46,7 +46,7 @@ func GetClient() Client {
 			panic("failed to ping MongoDB: %+v" + err.Error())
 		}
 
-		log.Infof("Connected with MongoDB.")
+		log.Infof(context.Background(), "Connected with MongoDB.")
 		clientSingleton = client
 	})
 

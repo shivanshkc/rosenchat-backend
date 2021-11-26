@@ -40,4 +40,6 @@ func (i *implGorilla) init() {
 	// OAuth routes.
 	i.router.HandleFunc("/api/auth/{provider}", oAuthRedirectHandler).Methods(http.MethodOptions, http.MethodGet)
 	i.router.HandleFunc("/api/auth/{provider}/callback", oAuthCallbackHandler).Methods(http.MethodOptions, http.MethodGet)
+
+	i.router.HandleFunc("/api/user/{user_id}", getUserHandler).Methods(http.MethodOptions, http.MethodGet)
 }

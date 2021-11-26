@@ -2,11 +2,8 @@ package ctxutils
 
 import (
 	"context"
-	"rosenchat/src/logger"
 	"time"
 )
-
-var log = logger.Get()
 
 // RequestContextKey is the key to which the context data will be mapped in the request.
 const RequestContextKey RequestContextKeyType = iota
@@ -20,21 +17,18 @@ type RequestContextData struct {
 	Arrival time.Time
 }
 
-// GetRequestInfoForLog extracts and returns the request info from the provided context for logging purposes.
-func GetRequestInfoForLog(ctx context.Context) interface{} {
+// GetRequestInfo provides the RequestContextData from the provided context.
+// If there is no data found, nil is returned.
+func GetRequestInfo(ctx context.Context) *RequestContextData {
 	contextDataInterface := ctx.Value(RequestContextKey)
 	if contextDataInterface == nil {
-		log.Warnf("Provided context does not have any request data.")
 		return nil
 	}
 
 	contextData, ok := contextDataInterface.(*RequestContextData)
 	if !ok {
-		log.Warnf("Provided context contains request data in unknown format.")
 		return nil
 	}
 
-	return map[string]interface{}{
-		"request_id": contextData.ID,
-	}
+	return contextData
 }

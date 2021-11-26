@@ -61,12 +61,14 @@ type IConfig struct {
 		ShutDownTimeoutSec int `default:"60" env:"HTTP_SERVER_SHUTDOWN_TIMEOUT_SEC" arg:"http-server-shutdown-timeout-sec"`
 	}
 
-	// Logger holds the logger configs.
-	Logger struct {
-		// Level is the logging level.
-		Level string `default:"info" env:"LOGGER_LEVEL" arg:"logger-level"`
-		// FilePath is the path to the log file.
-		FilePath string `default:"logs/service.log" env:"LOGGER_FILE_PATH" arg:"logger-file-path"`
+	// GoogleCloudLogger hold the configs for Google cloud logging.
+	GoogleCloudLogger struct {
+		// CloudEnabled is a flag that enables/disables the cloud logging feature. It does not affect logging on stdout.
+		CloudEnabled bool `default:"true" env:"GOOGLE_CLOUD_LOGGER_CLOUD_ENABLED" arg:"google-cloud-logger-cloud-enabled"`
+		// ProjectID is the ID of the Google (GCP) project for cloud logging purpose.
+		ProjectID string `default:"rosenchat" env:"GOOGLE_CLOUD_LOGGER_PROJECT_ID" arg:"google-cloud-logger-project-id"`
+		// KeyFile is the file that contains the service account credentials for logging permissions.
+		KeyFile string `default:"keys/service-account-key.json" env:"GOOGLE_CLOUD_LOGGER_KEY_FILE" arg:"google-cloud-logger-key-file"`
 	}
 
 	// Mongo holds the MongoDB configs.
