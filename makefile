@@ -72,8 +72,8 @@ container:
 		--name $(APPLICATION_NAME) \
 		--restart unless-stopped \
 		--net host \
-		--env-file prod.env \
-		--volume $(HOME)/docker/volumes/$(APPLICATION_NAME)/app-logs:/var/log \
+		--env-file $(HOME)/docker/volumes/$(APPLICATION_NAME)/.env \
+		--volume $(HOME)/docker/volumes/$(APPLICATION_NAME)/app-keys:/keys \
 		$(APPLICATION_NAME):latest
 
 proto:
@@ -84,3 +84,4 @@ proto:
 		--go-grpc_out=$(PROTO_GEN_PARENT_PATH) \
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_DEF_PATH)
+

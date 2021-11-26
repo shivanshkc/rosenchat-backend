@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"rosenchat/src/adapters"
+	"sync"
 	"syscall"
 )
 
@@ -24,7 +25,8 @@ func (a *application) start() {
 	for _, adapter := range a.adapters {
 		go func(adapter adapters.IAdapter) {
 			if err := adapter.Start(context.Background()); err != nil {
-				panic(fmt.Errorf("error from %s adapter: %w", adapter.Name(), err))
+				fmt.Printf("ERROR: Adapter: %s: %+v\n", adapter.Name(), err)
+				return
 			}
 		}(adapter)
 	}
@@ -33,16 +35,26 @@ func (a *application) start() {
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
+		defer close(interrupt)
+
+		// Stopping all adapters upon interruption.
 		<-interrupt
 		a.stop()
-		close(interrupt)
+
+		// Exiting.
+		os.Exit(0)
 	}()
 }
 
 // stop method stops the application by stopping all the adapters.
 func (a *application) stop() {
+	wg := &sync.WaitGroup{}
+
 	for _, adapter := range a.adapters {
+		wg.Add(1)
 		go func(adapter adapters.IAdapter) {
+			defer wg.Done()
+
 			if err := adapter.Stop(context.Background()); err != nil {
 				fmt.Printf("adapter: %s failed to stop: %+v\n", adapter.Name(), err)
 			} else {
@@ -50,6 +62,8 @@ func (a *application) stop() {
 			}
 		}(adapter)
 	}
+
+	wg.Wait()
 }
 
 func main() {
