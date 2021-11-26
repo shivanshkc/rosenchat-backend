@@ -1,6 +1,7 @@
 package business
 
 import (
+	"context"
 	"net/http"
 	"rosenchat/src/database"
 )
@@ -10,8 +11,8 @@ type implUserHandler struct {
 	userInfoDB database.IUserInfoDB
 }
 
-func (i *implUserHandler) GetUser(userID string) (*ResponseDTO, error) {
-	userInfo, err := i.userInfoDB.GetUserInfo(userID)
+func (i *implUserHandler) GetUser(ctx context.Context, userID string) (*ResponseDTO, error) {
+	userInfo, err := i.userInfoDB.GetUserInfo(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

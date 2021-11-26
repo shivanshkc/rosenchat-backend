@@ -21,7 +21,7 @@ type implMongoUserInfo struct {
 	client *mongo.Client
 }
 
-func (i *implMongoUserInfo) GetUserInfo(userID string) (*UserInfoDTO, error) {
+func (i *implMongoUserInfo) GetUserInfo(ctx context.Context, userID string) (*UserInfoDTO, error) {
 	timeoutDuration := time.Duration(conf.Mongo.OperationTimeoutSec) * time.Second
 	dbCallCtx, cancelFunc := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancelFunc()
@@ -32,20 +32,20 @@ func (i *implMongoUserInfo) GetUserInfo(userID string) (*UserInfoDTO, error) {
 			return nil, exception.UserNotFound()
 		}
 
-		log.Errorf("Unexpected error in FindOne call: %+v", result.Err())
+		log.Errorf(ctx, "Unexpected error in FindOne call: %+v", result.Err())
 		return nil, result.Err()
 	}
 
 	userInfo := &UserInfoDTO{}
 	if err := result.Decode(userInfo); err != nil {
-		log.Errorf("Unexpected error while decoding the user document: %+v", err)
+		log.Errorf(ctx, "Unexpected error while decoding the user document: %+v", err)
 		return nil, err
 	}
 
 	return userInfo, nil
 }
 
-func (i *implMongoUserInfo) PutUserInfo(info *UserInfoDTO) error {
+func (i *implMongoUserInfo) PutUserInfo(ctx context.Context, info *UserInfoDTO) error {
 	filter := bson.M{"_id": info.ID}
 	update := bson.M{"$set": info}
 	opts := options.Update().SetUpsert(true)
@@ -55,7 +55,7 @@ func (i *implMongoUserInfo) PutUserInfo(info *UserInfoDTO) error {
 	defer cancelFunc()
 
 	if _, err := i.getColl().UpdateOne(dbCallCtx, filter, update, opts); err != nil {
-		log.Errorf("Unexpected error in FindOneAndUpdate call: %+v", err)
+		log.Errorf(ctx, "Unexpected error in FindOneAndUpdate call: %+v", err)
 		return err
 	}
 
@@ -68,7 +68,7 @@ func (i *implMongoUserInfo) init() {
 	if err := i.addIndexes(); err != nil {
 		panic("failed to add indexes for " + userInfoTableName + " because: " + err.Error())
 	}
-	log.Infof("Indexes added for collection: %s", userInfoTableName)
+	log.Infof(context.Background(), "Indexes added for collection: %s", userInfoTableName)
 }
 
 // addIndexes adds the required indexes to the database if not already present.

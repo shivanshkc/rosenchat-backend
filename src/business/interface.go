@@ -1,6 +1,7 @@
 package business
 
 import (
+	"context"
 	"net/http"
 	"sync"
 )
@@ -14,10 +15,10 @@ var userHandlerSingleton IUserHandler
 // IOAuthHandler represents the business layer for OAuth requests.
 type IOAuthHandler interface {
 	// Redirect redirects the caller to the specified provider's auth page.
-	Redirect(provider string, writer http.ResponseWriter) (*ResponseDTO, error)
+	Redirect(ctx context.Context, provider string, writer http.ResponseWriter) (*ResponseDTO, error)
 
 	// HandleCallback handles the callback received from the provider.
-	HandleCallback(provider string, code string, writer http.ResponseWriter) (*ResponseDTO, error)
+	HandleCallback(ctx context.Context, provider string, code string, writer http.ResponseWriter) (*ResponseDTO, error)
 
 	// init can be used to initialize the implementation.
 	init()
@@ -26,7 +27,7 @@ type IOAuthHandler interface {
 // IUserHandler represents the business layer for the User entity.
 type IUserHandler interface {
 	// GetUser provides the profile of the user with the specified ID.
-	GetUser(userID string) (*ResponseDTO, error)
+	GetUser(ctx context.Context, userID string) (*ResponseDTO, error)
 
 	// init can be used to initialize the implementation.
 	init()

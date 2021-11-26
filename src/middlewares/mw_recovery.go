@@ -19,9 +19,9 @@ func Recovery(next http.Handler) http.Handler {
 				return
 			}
 
-			log.Warnf("Panic occurred during request execution: %+v", err)
+			log.Warnf(req.Context(), "Panic occurred during request execution: %+v", err)
 			exc := exception.ToException(err)
-			httputils.WriteJSON(writer, exc, nil, exc.StatusCode)
+			httputils.WriteJSON(req.Context(), writer, exc, nil, exc.StatusCode)
 		}()
 
 		next.ServeHTTP(writer, req)

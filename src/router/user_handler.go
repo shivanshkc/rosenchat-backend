@@ -13,12 +13,12 @@ import (
 func getUserHandler(writer http.ResponseWriter, req *http.Request) {
 	userID := mux.Vars(req)["user_id"]
 
-	response, err := business.GetUserHandler().GetUser(userID)
+	response, err := business.GetUserHandler().GetUser(req.Context(), userID)
 	if err != nil {
 		exc := exception.ToException(err)
-		httputils.WriteJSON(writer, exc, nil, exc.StatusCode)
+		httputils.WriteJSON(req.Context(), writer, exc, nil, exc.StatusCode)
 		return
 	}
 
-	httputils.WriteJSON(writer, response.Body, response.Headers, response.StatusCode)
+	httputils.WriteJSON(req.Context(), writer, response.Body, response.Headers, response.StatusCode)
 }

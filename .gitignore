@@ -4,6 +4,9 @@ bin
 # Configurations
 prod.env
 
+# Secrets
+keys
+
 # IDE Metadata
 .idea
 

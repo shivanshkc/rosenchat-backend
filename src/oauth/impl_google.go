@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -21,67 +22,67 @@ type implGoogle struct {
 	jwtManager jwt.IJWTManager
 }
 
-func (i *implGoogle) Name() string {
+func (i *implGoogle) Name(ctx context.Context) string {
 	return "google"
 }
 
-func (i *implGoogle) GetRedirectURL() string {
+func (i *implGoogle) GetRedirectURL(ctx context.Context) string {
 	return fmt.Sprintf(
 		"%s?scope=%s&include_granted_scopes=true&response_type=code&redirect_uri=%s&client_id=%s",
 		conf.GoogleOAuth.RedirectURL,
 		conf.GoogleOAuth.Scopes,
-		fmt.Sprintf("%s/api/auth/%s/callback", conf.GeneralOAuth.ServerCallbackBaseURL, i.Name()),
+		fmt.Sprintf("%s/api/auth/%s/callback", conf.GeneralOAuth.ServerCallbackBaseURL, i.Name(ctx)),
 		conf.GoogleOAuth.ClientID,
 	)
 }
 
-func (i *implGoogle) Code2Token(code string) (string, error) {
+func (i *implGoogle) Code2Token(ctx context.Context, code string) (string, error) {
 	body, err := json.Marshal(map[string]interface{}{
 		"code":          code,
 		"client_id":     conf.GoogleOAuth.ClientID,
 		"client_secret": conf.GoogleOAuth.ClientSecret,
-		"redirect_uri":  fmt.Sprintf("%s/api/auth/%s/callback", conf.GeneralOAuth.ServerCallbackBaseURL, i.Name()),
+		"redirect_uri":  fmt.Sprintf("%s/api/auth/%s/callback", conf.GeneralOAuth.ServerCallbackBaseURL, i.Name(ctx)),
 		"grant_type":    "authorization_code",
 	})
 	if err != nil {
-		log.Errorf("Failed to marshal request body: %s", err.Error())
+		log.Errorf(ctx, "Failed to marshal request body: %s", err.Error())
 		return "", err
 	}
 
 	resp, err := http.Post(conf.GoogleOAuth.TokenEndpoint, "application/json", bytes.NewReader(body))
 	if err != nil {
-		log.Errorf("Failed to execute HTTP request: %s", err.Error())
+		log.Errorf(ctx, "Failed to execute HTTP request: %s", err.Error())
 		return "", err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("Failed to read response body: %s", err.Error())
+		log.Errorf(ctx, "Failed to read response body: %s", err.Error())
 		return "", err
 	}
 
 	if resp.StatusCode > 299 {
-		log.Errorf("Endpoint returned unsuccessful status code. Body:\n%s", string(bodyBytes))
+		log.Errorf(ctx, "Endpoint returned unsuccessful status code. Body:\n%s", string(bodyBytes))
 		return "", exception.InternalServerError()
 	}
 
 	bodyMap := map[string]interface{}{}
 	if err := json.Unmarshal(bodyBytes, &bodyMap); err != nil {
-		log.Errorf("Failed to unmarshal result into map: %s", err.Error())
+		log.Errorf(ctx, "Failed to unmarshal result into map: %s", err.Error())
 		return "", err
 	}
 
 	idToken, exists := bodyMap["id_token"]
 	if !exists || idToken == nil {
-		log.Errorf("Result did not contain an ID Token.")
+		log.Errorf(ctx, "Result did not contain an ID Token.")
 		return "", exception.InternalServerError()
 	}
 
 	return idToken.(string), nil
 }
 
-func (i *implGoogle) Token2UserInfo(token string) (*database.UserInfoDTO, error) {
+func (i *implGoogle) Token2UserInfo(ctx context.Context, token string) (*database.UserInfoDTO, error) {
 	claims, err := i.jwtManager.DecodeUnsafe(token)
 	if err != nil {
 		return nil, err
@@ -93,7 +94,7 @@ func (i *implGoogle) Token2UserInfo(token string) (*database.UserInfoDTO, error)
 	pictureLink := claims["picture"]
 
 	if !existsE || !existsF || !existsL {
-		log.Errorf("Insufficient information from provider.")
+		log.Errorf(ctx, "Insufficient information from provider.")
 		return nil, exception.InternalServerError().AddMessages("insufficient info")
 	}
 

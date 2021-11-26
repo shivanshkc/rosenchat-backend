@@ -1,6 +1,9 @@
 package logger
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 var loggerOnce = &sync.Once{}
 var loggerSingleton ILogger
@@ -8,13 +11,16 @@ var loggerSingleton ILogger
 // ILogger represents the application logger.
 type ILogger interface {
 	// Debugf logs at debug level.
-	Debugf(format string, a ...interface{})
+	Debugf(ctx context.Context, format string, a ...interface{})
 	// Infof logs at info level.
-	Infof(format string, a ...interface{})
+	Infof(ctx context.Context, format string, a ...interface{})
 	// Warnf logs at warm level.
-	Warnf(format string, a ...interface{})
+	Warnf(ctx context.Context, format string, a ...interface{})
 	// Errorf logs at error level.
-	Errorf(format string, a ...interface{})
+	Errorf(ctx context.Context, format string, a ...interface{})
+
+	// Close closes the logger (required when logger logs over the network).
+	Close(ctx context.Context)
 
 	// init can be used to initialize the implementation.
 	init()
@@ -23,7 +29,7 @@ type ILogger interface {
 // Get provides the ILogger singleton.
 func Get() ILogger {
 	loggerOnce.Do(func() {
-		loggerSingleton = &implZap{}
+		loggerSingleton = &implGCP{}
 		loggerSingleton.init()
 	})
 	return loggerSingleton
